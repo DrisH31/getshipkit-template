@@ -583,7 +583,7 @@ async function storeSubscriptionData(subscription: PolarSubscription, eventType:
             status === "active";
           
           if (isUncancelling) {
-            logger.info(eventType, 'Detected subscription uncancellation: changing from ${existingStatus} to active');
+            logger.info(eventType, `Detected subscription uncancellation: changing from ${existingStatus} to active`);
             logger.info(eventType, 'Explicitly ensuring cancel_at_period_end is false for uncancellation');
             
             // Force status to active when uncancelling
@@ -591,7 +591,7 @@ async function storeSubscriptionData(subscription: PolarSubscription, eventType:
             // Ensure cancel_at_period_end is false
             subscription.cancelAtPeriodEnd = false;
           } else if (isTerminalToActive && eventType !== "subscription.active") {
-            logger.info(eventType, 'Preventing downgrade from terminal status ${existingStatus} to ${status}');
+            logger.info(eventType, `Preventing downgrade from terminal status ${existingStatus} to ${status}`);
             logger.info(eventType, 'This change can only happen via subscription.active event');
             
             // Keep the existing terminal status
