@@ -56,15 +56,26 @@ export async function POST(/* eslint-disable-next-line @typescript-eslint/no-unu
     
     // 3. Cancel the subscription in Polar using a direct API call
     try {
-      const subscriptionId = subscription.product_id;
-      
+      // The subscriptions table stores the Polar subscription ID in the `id`
+      // column (set by the Polar webhook handler), not in `product_id`.
+      const subscriptionId = subscription.id;
+
       if (subscriptionId) {
-        const polarResponse = await fetch(`https://api.polar.sh/subscriptions/${subscriptionId}/cancel`, {
-          method: 'POST',
+        // Respect the configured Polar mode (sandbox vs production) so we hit
+        // the same environment the subscription was created in.
+        const polarMode = process.env.POLAR_MODE || "sandbox";
+        const baseUrl = polarMode === "production"
+          ? "https://api.polar.sh"
+          : "https://api.sandbox.polar.sh";
+
+        // Cancel at period end via the standard subscription resource.
+        const polarResponse = await fetch(`${baseUrl}/v1/subscriptions/${subscriptionId}`, {
+          method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${process.env.POLAR_ACCESS_TOKEN}`
-          }
+          },
+          body: JSON.stringify({ cancel_at_period_end: true })
         });
         
         if (!polarResponse.ok) {

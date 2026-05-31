@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 
-export async function GET(/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+// This endpoint mutates data (it relinks subscriptions to the current user),
+// so it is exposed as POST rather than GET to avoid being triggerable via a
+// cross-site GET request.
+export async function POST(/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   request: NextRequest) {
   try {
     // Get authenticated user
@@ -35,10 +38,10 @@ export async function GET(/* eslint-disable-next-line @typescript-eslint/no-unus
       });
     }
     
-    // 2. Find user by email in our users table
+    // 2. Find the profile that owns this email (profiles is keyed by user_id)
     const { data: users, error: userError } = await adminClient
-      .from('users')
-      .select('id, email')
+      .from('profiles')
+      .select('user_id, email')
       .eq('email', userEmail);
       
     if (userError) {
@@ -58,8 +61,8 @@ export async function GET(/* eslint-disable-next-line @typescript-eslint/no-unus
     const { data: subscriptions, error: subError } = await adminClient
       .from('subscriptions')
       .select('*')
-      .eq('user_id', users[0].id);
-      
+      .eq('user_id', users[0].user_id);
+
     if (subError) {
       return NextResponse.json({ 
         error: "Error finding subscriptions", 
@@ -77,7 +80,7 @@ export async function GET(/* eslint-disable-next-line @typescript-eslint/no-unus
     const { data: updateResult, error: updateError } = await adminClient
       .from('subscriptions')
       .update({ user_id: userId })
-      .eq('user_id', users[0].id)
+      .eq('user_id', users[0].user_id)
       .select();
       
     if (updateError) {
@@ -91,7 +94,7 @@ export async function GET(/* eslint-disable-next-line @typescript-eslint/no-unus
       success: true,
       message: "Successfully updated subscription user IDs",
       updated: updateResult,
-      fromUserId: users[0].id,
+      fromUserId: users[0].user_id,
       toUserId: userId
     });
   } catch (error) {
