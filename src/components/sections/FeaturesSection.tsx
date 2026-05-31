@@ -152,7 +152,7 @@ export default function FeaturesSection() {
   ];
 
   // Animation variants
-  const fadeInUp = {
+  const fadeInUp: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
@@ -164,7 +164,7 @@ export default function FeaturesSection() {
     }
   };
 
-  const tabContentVariants = {
+  const tabContentVariants: Variants = {
     hidden: { opacity: 0, x: 20 },
     visible: { 
       opacity: 1, 
